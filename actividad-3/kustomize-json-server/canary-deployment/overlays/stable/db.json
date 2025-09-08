@@ -1,0 +1,22 @@
+{
+  "posts": [
+    { "id": 1, "title": "STABLE - json-server", "author": "typicode" },
+    { "id": 2, "title": "STABLE - json-server", "author": "typicode" },
+    { "id": 3, "title": "STABLE - json-server", "author": "typicode" },
+    { "id": 4, "title": "STABLE - json-server", "author": "typicode" },
+    { "id": 5, "title": "STABLE - json-server", "author": "typicode" },
+    { "id": 6, "title": "STABLE - Kustomize Production", "author": "kubernetes" }
+  ],
+  "comments": [
+    { "id": 1, "body": "stable version comment", "postId": 1 },
+    { "id": 2, "body": "stable second comment", "postId": 1 },
+    { "id": 3, "body": "stable new comment", "postId": 2 },
+    { "id": 4, "body": "stable hi!", "postId": 3 },
+    { "id": 5, "body": "stable some comment", "postId": 5 }
+  ],
+  "profile": { 
+    "name": "mikroways-stable",
+    "version": "1.0.0",
+    "environment": "production"
+  }
+}

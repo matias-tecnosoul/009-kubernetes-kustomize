@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-html
+  labels:
+    app: nginx
+data:
+  index.html: |
+    <html>
+    <body>
+    <h1>Fundamentos de kubernetes</h1>
+    Hola desde un POD
+    </body>
+    </html>

@@ -1,0 +1,27 @@
+{
+  "posts": [
+    { "id": 1, "title": "CANARY - New API v2.0", "author": "canary-team" },
+    { "id": 2, "title": "CANARY - Beta Features", "author": "canary-team" },
+    { "id": 3, "title": "CANARY - Testing Mode", "author": "canary-team" },
+    { "id": 4, "title": "CANARY - Experimental", "author": "canary-team" },
+    { "id": 5, "title": "CANARY - json-server v2", "author": "canary-team" },
+    { "id": 6, "title": "CANARY - Advanced Kustomize", "author": "kubernetes-beta" }
+  ],
+  "comments": [
+    { "id": 1, "body": "canary testing comment", "postId": 1 },
+    { "id": 2, "body": "canary beta comment", "postId": 1 },
+    { "id": 3, "body": "canary experimental", "postId": 2 },
+    { "id": 4, "body": "canary hello!", "postId": 3 },
+    { "id": 5, "body": "canary new feature", "postId": 5 }
+  ],
+  "profile": { 
+    "name": "mikroways-canary",
+    "version": "2.0.0",
+    "environment": "canary",
+    "beta": true
+  },
+  "beta_features": [
+    { "id": 1, "feature": "advanced-search", "enabled": true },
+    { "id": 2, "feature": "real-time-updates", "enabled": true }
+  ]
+}
