@@ -1,3 +1,4 @@
+//canary-deployment/overlays/canary/db.json
 {
   "posts": [
     { "id": 1, "title": "CANARY - New API v2.0", "author": "canary-team" },

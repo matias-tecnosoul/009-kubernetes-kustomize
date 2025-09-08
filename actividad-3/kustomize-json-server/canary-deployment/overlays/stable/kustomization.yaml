@@ -1,3 +1,4 @@
+#canary-deployment/overlays/stable/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -7,30 +8,32 @@ resources:
 - ../../base
 
 namePrefix: stable-
-nameSuffix: "-v1"
+nameSuffix: -v1
 
 replicas:
-- name: json-server
-  count: 3
+- count: 3
+  name: json-server
 
 configMapGenerator:
-- name: json-server-db
-  files:
+- files:
   - db.json
+  name: json-server-db
 
-commonLabels:
-  version: stable
-  release: production
 
 # Asegurar que los pods tienen label version: stable
 patches:
-- target:
-    kind: Deployment
-    name: json-server
-  patch: |-
+- patch: |-
     - op: add
       path: /spec/selector/matchLabels/version
       value: stable
     - op: add
       path: /spec/template/metadata/labels/version
       value: stable
+  target:
+    kind: Deployment
+    name: json-server
+labels:
+- includeSelectors: true
+  pairs:
+    release: production
+    version: stable
