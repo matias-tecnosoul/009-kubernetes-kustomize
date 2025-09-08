@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: actividad-03
+
+resources:
+- ../overlays/stable
+- ../overlays/canary
+
+commonLabels:
+  deployment-strategy: canary
