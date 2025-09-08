@@ -1,4 +1,3 @@
-//canary-deployment/overlays/stable/db.json
 {
   "posts": [
     { "id": 1, "title": "STABLE - json-server", "author": "typicode" },

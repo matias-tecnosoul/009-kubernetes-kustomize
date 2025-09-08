@@ -7,6 +7,7 @@ namespace: actividad-03
 resources:
 - ../overlays/stable
 - ../overlays/canary
+- manifests/service.yaml
 
 labels:
 - includeSelectors: true

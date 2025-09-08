@@ -1,15 +1,14 @@
-#canary-deployment/base/service.yaml
+#canary-deployment/production/manifests/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: json-server
   labels:
     app: json-server
-    app.kubernetes.io/managed-by: kustomize
 spec:
   type: NodePort
   selector:
-    app: json-server  # Solo este label - NO incluye version
+    app: json-server
   ports:
   - port: 80
     targetPort: 80
