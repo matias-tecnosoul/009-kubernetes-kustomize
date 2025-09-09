@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-volume-test
+  namespace: actividad-04
+  labels:
+    app: local-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-test
+  template:
+    metadata:
+      labels:
+        app: local-test
+    spec:
+      containers:
+      - name: writer
+        image: busybox
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          echo "=== Local Volume Test ===" 
+          echo "Nodo: \$(hostname)" 
+          echo "Fecha: \$(date)" 
+          echo "Contenido inicial del volumen:"
+          ls -la /data/
+          echo "Escribiendo datos de prueba..."
+          echo "Datos desde pod \$(hostname) - \$(date)" > /data/test-file.txt
+          echo "Creando estructura de directorios..."
+          mkdir -p /data/logs /data/config
+          echo "config-value=123" > /data/config/app.conf
+          echo "Log inicial - \$(date)" > /data/logs/app.log
+          echo "=== Contenido final ==="
+          find /data -type f -exec echo "Archivo: {}" \; -exec cat {} \;
+          echo "=== Manteniendo pod activo ==="
+          while true; do 
+            echo "\$(date): Pod activo en nodo \$(hostname)" >> /data/logs/heartbeat.log
+            sleep 30
+          done
+        volumeMounts:
+        - name: local-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+      volumes:
+      - name: local-storage
+        persistentVolumeClaim:
+          claimName: mikroways-local-claim
