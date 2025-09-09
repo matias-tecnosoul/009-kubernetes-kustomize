@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-clusterip-svc
+  namespace: actividad-04
+  labels:
+    app: mysql-service
+spec:
+  type: ClusterIP  # Default, se puede omitir
+  selector:
+    app: mysql-emptydir  # Cambiar por el label correcto del pod MySQL
+  ports:
+  - name: mysql-port
+    port: 3306        # Puerto del servicio
+    targetPort: 3306  # Puerto del pod
+    protocol: TCP
