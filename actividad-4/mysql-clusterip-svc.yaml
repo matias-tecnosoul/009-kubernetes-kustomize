@@ -6,7 +6,7 @@ metadata:
   labels:
     app: mysql-service
 spec:
-  type: ClusterIP  # Default, se puede omitir
+  type: NodePort  # cambiado desde ClusterIP a NodePort
   selector:
     app: mysql-emptydir  # Cambiar por el label correcto del pod MySQL
   ports:
