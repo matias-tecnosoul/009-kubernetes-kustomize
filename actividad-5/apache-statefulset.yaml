@@ -1,0 +1,220 @@
+# =================================================================
+# NAMESPACE PARA LA ACTIVIDAD 5
+# =================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: actividad-05
+
+---
+# =================================================================
+# STATEFULSET DE APACHE CON INITCONTAINER Y DOWNWARD API
+# =================================================================
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: apache-sts
+  namespace: actividad-05
+  labels:
+    app: apache-sts
+spec:
+  # NOTA: Sin serviceName por ahora (lo agregaremos en el siguiente ejercicio)
+  replicas: 3
+  selector:
+    matchLabels:
+      app: apache-sts
+  template:
+    metadata:
+      labels:
+        app: apache-sts
+        tier: web
+    spec:
+      # =============================================================
+      # INIT CONTAINER - Genera index.html único usando Downward API
+      # =============================================================
+      initContainers:
+      - name: init-html
+        image: busybox:1.35
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Inicializando volumen para el pod: $POD_NAME"
+          
+          # Crear el archivo index.html con información del pod
+          cat > /var/www/html/index.html << EOF
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Apache StatefulSet - $POD_NAME</title>
+              <style>
+                  body { 
+                      font-family: Arial, sans-serif; 
+                      margin: 40px; 
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                  }
+                  .container { 
+                      background: rgba(255,255,255,0.1); 
+                      padding: 30px; 
+                      border-radius: 15px; 
+                      backdrop-filter: blur(10px);
+                      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+                  }
+                  h1 { color: #fff; text-align: center; margin-bottom: 30px; }
+                  .pod-info { 
+                      background: rgba(255,255,255,0.2); 
+                      padding: 20px; 
+                      border-radius: 10px; 
+                      margin: 20px 0; 
+                  }
+                  .label { font-weight: bold; color: #ffd700; }
+                  .value { margin: 5px 0 15px 20px; font-family: monospace; font-size: 1.1em; }
+                  .highlight { 
+                      background: rgba(255,215,0,0.3); 
+                      padding: 15px; 
+                      border-radius: 8px; 
+                      border-left: 4px solid #ffd700;
+                      margin: 20px 0;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🚀 Apache StatefulSet Pod</h1>
+                  
+                  <div class="highlight">
+                      <h2>📋 Información del Pod</h2>
+                  </div>
+                  
+                  <div class="pod-info">
+                      <div class="label">🏷️ Nombre del Pod:</div>
+                      <div class="value">$POD_NAME</div>
+                      
+                      <div class="label">🏠 Namespace:</div>
+                      <div class="value">$POD_NAMESPACE</div>
+                      
+                      <div class="label">🌐 IP del Pod:</div>
+                      <div class="value">$POD_IP</div>
+                      
+                      <div class="label">🖥️ Nodo:</div>
+                      <div class="value">$NODE_NAME</div>
+                      
+                      <div class="label">🆔 UID del Pod:</div>
+                      <div class="value">$POD_UID</div>
+                  </div>
+                  
+                  <div class="highlight">
+                      <h3>💾 Volumen Persistente</h3>
+                      <p>Este pod utiliza un volumen persistente único:</p>
+                      <ul>
+                          <li><strong>PVC:</strong> apache-storage-$POD_NAME</li>
+                          <li><strong>Ubicación:</strong> /usr/local/apache2/htdocs</li>
+                          <li><strong>Modo:</strong> ReadWriteOnce</li>
+                      </ul>
+                  </div>
+                  
+                  <div class="highlight">
+                      <p><strong>⚡ Generado automáticamente por:</strong> initContainer</p>
+                      <p><strong>📅 Fecha:</strong> $(date)</p>
+                      <p><strong>🔧 Tecnología:</strong> Kubernetes Downward API</p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+          
+          echo "✅ Archivo index.html creado exitosamente para $POD_NAME"
+          echo "📁 Contenido del directorio:"
+          ls -la /var/www/html/
+          echo "📄 Tamaño del archivo:"
+          wc -c /var/www/html/index.html
+        
+        # Variables de entorno obtenidas via Downward API
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        
+        # Montar el volumen donde se creará el index.html
+        volumeMounts:
+        - name: apache-storage
+          mountPath: /var/www/html
+
+      # =============================================================
+      # CONTENEDOR PRINCIPAL - Apache HTTP Server
+      # =============================================================
+      containers:
+      - name: apache
+        image: httpd:2.4
+        ports:
+        - containerPort: 80
+          name: http
+        
+        # Montar el mismo volumen que usó el initContainer
+        volumeMounts:
+        - name: apache-storage
+          mountPath: /usr/local/apache2/htdocs
+        
+        # Variables útiles para debugging
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        
+        # Configuración de recursos
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        
+        # Probes de salud
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+  # ===============================================================
+  # PLANTILLAS DE VOLÚMENES - Crea un PVC único para cada pod
+  # ===============================================================
+  volumeClaimTemplates:
+  - metadata:
+      name: apache-storage
+      labels:
+        app: apache-sts
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
