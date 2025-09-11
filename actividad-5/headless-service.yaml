@@ -1,0 +1,217 @@
+# =================================================================
+# SERVICIO HEADLESS PARA EL STATEFULSET DE APACHE
+# =================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: apache-headless
+  namespace: actividad-05
+  labels:
+    app: apache-sts
+    service-type: headless
+spec:
+  # ¡CLAVE! clusterIP: None lo hace headless
+  clusterIP: None
+  
+  # Selector para encontrar los pods del StatefulSet
+  selector:
+    app: apache-sts
+  
+  # Puertos que expone el servicio
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  
+  # Opcional: publishNotReadyAddresses permite DNS a pods no ready
+  publishNotReadyAddresses: true
+
+---
+# =================================================================
+# ACTUALIZACIÓN DEL STATEFULSET - Agregar serviceName
+# =================================================================
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: apache-sts
+  namespace: actividad-05
+  labels:
+    app: apache-sts
+spec:
+  # ¡IMPORTANTE! Conectar el StatefulSet con el servicio headless
+  serviceName: apache-headless
+  
+  replicas: 3
+  selector:
+    matchLabels:
+      app: apache-sts
+  template:
+    metadata:
+      labels:
+        app: apache-sts
+        tier: web
+    spec:
+      # =============================================================
+      # INIT CONTAINER - Actualizado con info del servicio headless
+      # =============================================================
+      initContainers:
+      - name: init-html
+        image: busybox:1.35
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Inicializando volumen para el pod: $POD_NAME"
+          
+          cat > /var/www/html/index.html << EOF
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>$POD_NAME - Apache StatefulSet</title>
+              <style>
+                  body { 
+                      font-family: Arial, sans-serif; 
+                      margin: 40px; 
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                  }
+                  .container { 
+                      background: rgba(255,255,255,0.1); 
+                      padding: 30px; 
+                      border-radius: 15px; 
+                      backdrop-filter: blur(10px);
+                  }
+                  .dns-section { 
+                      background: rgba(255,215,0,0.2); 
+                      padding: 20px; 
+                      border-radius: 10px; 
+                      margin: 20px 0;
+                      border-left: 4px solid #ffd700;
+                  }
+                  .pod-info { 
+                      background: rgba(255,255,255,0.2); 
+                      padding: 20px; 
+                      border-radius: 10px; 
+                      margin: 20px 0; 
+                  }
+                  .label { font-weight: bold; color: #ffd700; }
+                  .value { margin: 5px 0 15px 20px; font-family: monospace; font-size: 1.1em; }
+                  code { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 3px; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🚀 $POD_NAME</h1>
+                  
+                  <div class="pod-info">
+                      <div class="label">🏷️ Nombre del Pod:</div>
+                      <div class="value">$POD_NAME</div>
+                      
+                      <div class="label">🏠 Namespace:</div>
+                      <div class="value">$POD_NAMESPACE</div>
+                      
+                      <div class="label">🌐 IP del Pod:</div>
+                      <div class="value">$POD_IP</div>
+                      
+                      <div class="label">🖥️ Nodo:</div>
+                      <div class="value">$NODE_NAME</div>
+                  </div>
+                  
+                  <div class="dns-section">
+                      <h3>🌐 DNS Headless Service</h3>
+                      <p><strong>Servicio Headless:</strong> <code>apache-headless.actividad-05.svc.cluster.local</code></p>
+                      <p><strong>DNS directo a este pod:</strong> <code>$POD_NAME.apache-headless.actividad-05.svc.cluster.local</code></p>
+                      
+                      <h4>📋 Comandos de prueba DNS:</h4>
+                      <ul>
+                          <li><code>nslookup apache-headless.actividad-05.svc.cluster.local</code></li>
+                          <li><code>nslookup $POD_NAME.apache-headless.actividad-05.svc.cluster.local</code></li>
+                          <li><code>curl http://apache-sts-0.apache-headless.actividad-05.svc.cluster.local</code></li>
+                      </ul>
+                  </div>
+                  
+                  <div class="pod-info">
+                      <h3>💾 Volumen Persistente</h3>
+                      <p><strong>PVC:</strong> apache-storage-$POD_NAME</p>
+                      <p><strong>Ubicación:</strong> /usr/local/apache2/htdocs</p>
+                  </div>
+                  
+                  <p><strong>📅 Generado:</strong> $(date)</p>
+              </div>
+          </body>
+          </html>
+          EOF
+          
+          echo "✅ Archivo index.html actualizado para $POD_NAME con info de headless service"
+        
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        
+        volumeMounts:
+        - name: apache-storage
+          mountPath: /var/www/html
+
+      containers:
+      - name: apache
+        image: httpd:2.4
+        ports:
+        - containerPort: 80
+          name: http
+        
+        volumeMounts:
+        - name: apache-storage
+          mountPath: /usr/local/apache2/htdocs
+        
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+  volumeClaimTemplates:
+  - metadata:
+      name: apache-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
