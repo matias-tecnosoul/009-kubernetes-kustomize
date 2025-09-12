@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: busybox-worker-only
+  namespace: actividad-05
+  labels:
+    app: busybox-daemon
+spec:
+  selector:
+    matchLabels:
+      app: busybox-daemon
+  template:
+    metadata:
+      labels:
+        app: busybox-daemon
+    spec:
+      containers:
+      - name: busybox
+        image: busybox:1.35
+        args:
+        - sleep
+        - "10000"
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+      # Por defecto, NO corre en master nodes debido a taints

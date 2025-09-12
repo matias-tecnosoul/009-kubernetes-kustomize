@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: my-job-parallel
+  namespace: actividad-05
+spec:
+  completions: 5   # Debe completarse 5 veces
+  parallelism: 5   # Ejecutar hasta 5 pods simultáneamente
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: busybox
+        image: busybox:1.35
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "=== PARALLEL JOB EXECUTION ==="
+          echo "Pod: $HOSTNAME"
+          echo "Started at: $(date)"
+          
+          # Simular trabajo con duración variable
+          DURATION=$((5 + RANDOM % 10))
+          echo "Working for $DURATION seconds..."
+          sleep $DURATION
+          
+          echo "Completed at: $(date)"
+          echo "=== JOB FINISHED ==="
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"

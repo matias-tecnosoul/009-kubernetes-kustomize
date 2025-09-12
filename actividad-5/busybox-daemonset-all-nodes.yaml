@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: busybox-all-nodes
+  namespace: actividad-05
+  labels:
+    app: busybox-all-nodes
+spec:
+  selector:
+    matchLabels:
+      app: busybox-all-nodes
+  template:
+    metadata:
+      labels:
+        app: busybox-all-nodes
+    spec:
+      # CLAVE: Tolerar taints para correr en master nodes
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      
+      containers:
+      - name: busybox
+        image: busybox:1.35
+        args:
+        - sleep
+        - "10000"
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"

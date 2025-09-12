@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: my-job-completions
+  namespace: actividad-05
+spec:
+  completions: 5  # Debe completarse 5 veces exitosamente
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: busybox
+        image: busybox:1.35
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "=== Execution started ==="
+          echo "Pod name: $HOSTNAME"
+          echo "Timestamp: $(date)"
+          echo "Random number: $RANDOM"
+          sleep 5  # Simular trabajo
+          echo "=== Execution completed successfully ==="
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"

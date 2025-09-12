@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: minute-date-printer
+  namespace: actividad-05
+spec:
+  schedule: "*/1 * * * *"  # Cada minuto
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: cron
+            image: busybox:1.35
+            command:
+            - /bin/sh
+            - -c
+            args:
+            - date; echo "from cron"
+            resources:
+              requests:
+                memory: "16Mi"
+                cpu: "5m"
+              limits:
+                memory: "32Mi"
+                cpu: "10m"

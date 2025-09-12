@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: my-job
+  namespace: actividad-05
+spec:
+  template:
+    spec:
+      restartPolicy: Never  # Importante: Never o OnFailure
+      containers:
+      - name: busybox
+        image: busybox:1.35
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Hello from my job"
+          echo "Job started at: $(date)"
+          echo "Running on pod: $HOSTNAME"
+          echo "Job completed successfully!"
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
