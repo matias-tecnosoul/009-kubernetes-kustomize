@@ -42,7 +42,8 @@ spec:
         - name: config-map
           mountPath: /mnt/config-map
       - name: clone-mysql
-        image: perconalab/percona-xtrabackup:2.4
+        # CAMBIO: Usar imagen funcional en lugar de gcr.io/google-samples/xtrabackup:1.0
+        image: perconalab/percona-xtrabackup:8.0
         command:
         - bash
         - "-c"
@@ -70,6 +71,8 @@ spec:
         env:
         - name: MYSQL_ALLOW_EMPTY_PASSWORD
           value: "1"
+        - name: MYSQL_ROOT_HOST
+          value: "%"
         ports:
         - name: mysql
           containerPort: 3306
@@ -81,8 +84,11 @@ spec:
           mountPath: /etc/mysql/conf.d
         resources:
           requests:
-            cpu: 500m
-            memory: 1Gi
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         livenessProbe:
           exec:
             command: ["mysqladmin", "ping"]
@@ -97,7 +103,8 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 1
       - name: xtrabackup
-        image: perconalab/percona-xtrabackup:2.4
+        # CAMBIO: Usar imagen funcional
+        image: perconalab/percona-xtrabackup:8.0
         ports:
         - name: xtrabackup
           containerPort: 3307
@@ -151,8 +158,11 @@ spec:
           mountPath: /etc/mysql/conf.d
         resources:
           requests:
-            cpu: 100m
-            memory: 100Mi
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
       volumes:
       - name: conf
         emptyDir: {}
