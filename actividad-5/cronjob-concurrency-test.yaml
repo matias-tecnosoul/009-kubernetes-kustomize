@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: long-running-cron
+  namespace: actividad-05
+spec:
+  schedule: "*/1 * * * *"  # Cada minuto
+  concurrencyPolicy: Forbid  # Cambiar este valor para probar: Allow, Forbid, Replace
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: cron
+            image: busybox:1.35
+            command:
+            - /bin/sh
+            - -c
+            args:
+            - |
+              echo "=== JOB STARTED ==="
+              echo "Pod: $HOSTNAME"
+              echo "Started at: $(date)"
+              echo "This job will sleep for 5 minutes..."
+              sleep 300  # 5 minutos
+              echo "Finished at: $(date)"
+              echo "=== JOB COMPLETED ==="
+            resources:
+              requests:
+                memory: "16Mi"
+                cpu: "5m"
+              limits:
+                memory: "32Mi"
+                cpu: "10m"

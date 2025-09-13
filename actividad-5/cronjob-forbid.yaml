@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: forbid-test
+  namespace: actividad-05
+spec:
+  schedule: "*/1 * * * *"
+  concurrencyPolicy: Replace  
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: cron
+            image: busybox:1.35
+            command: ["/bin/sh", "-c"]
+            args: ["echo 'Started at:' $(date); sleep 300; echo 'Finished at:' $(date)"]
